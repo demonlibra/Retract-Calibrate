@@ -7,7 +7,7 @@ var temperature_hotend=245    ; Указать температуру HotEnd`а,
 var temperature_hotbed=110    ; Указать температуру стола, C
 
 var retract_start=0.0         ; Указать начальную длину ретракта, мм
-var retract_step=0.1          ; Указать шаг изменения ретракта, мм
+var retract_step=0.05         ; Указать шаг изменения ретракта, мм
 var retract_step_height=5     ; Указать высоту печати с одной длиной ретракта, мм
 var retract_number_steps=5    ; Указать количество тестовых ступеней
 
@@ -86,7 +86,7 @@ var retract_length=var.retract_start                                    ; Соз
 var print_diameter=0                                                    ; Создание переменной - диаметр печатаемой окружности
 var filament_length=0                                                   ; Создание переменной - длина филамента при печати окружности
 var layers_count=1                                                      ; Создание переменной - счётчик слоёв
-var layers_number=floor(var.retract_number_steps*var.retract_step_height/var.retract_step) ; Общее колиство слоёв
+var layers_number=floor(var.retract_number_steps*var.retract_step_height/var.line_height) ; Общее колиство слоёв
 echo "Всего слоёв "^var.layers_number
 
 while var.layers_count <= var.layers_number                             ; Выполнять цикл до достижения общего количества слоёв
@@ -103,7 +103,7 @@ while var.layers_count <= var.layers_number                             ; Вып
    G1 X{var.start_X+var.print_diameter/2} Y{var.start_Y} F{var.travel_speed*60}
    G1 Z{var.line_height*var.layers_count}                               ; Перемещение Z на высоту текущего слоя
    G11                                                                  ; Возврат пластика после ретракта
-   while var.print_diameter > 4*var.line_width                          ; Ограничение печати внутреннего заполнения
+   while var.print_diameter > 8*var.line_width                          ; Ограничение печати внутреннего заполнения
       set var.filament_length=(var.line_width*var.line_height*pi*var.print_diameter)/(pi*var.filament_diameter*var.filament_diameter/4)*var.extrusion_multiplier
       G2 I{-var.print_diameter/2} E{var.filament_length} F{var.print_speed*60}
       if var.layers_count!=1                                            ; Если это НЕ 1-й слой, то НЕ печатать кайму и внутренне заполнение
@@ -121,7 +121,7 @@ while var.layers_count <= var.layers_number                             ; Вып
    G1 X{var.start_X+var.towers_distance-var.print_diameter/2} Y{var.start_Y} F{var.travel_speed*60}
    G1 Z{var.line_height*var.layers_count}                               ; Перемещение Z на высоту текущего слоя
    G11                                                                  ; Возврат пластика после ретракта
-   while var.print_diameter > 4*var.line_width                          ; Ограничение печати внутреннего заполнения
+   while var.print_diameter > 8*var.line_width                          ; Ограничение печати внутреннего заполнения
       set var.filament_length=(var.line_width*var.line_height*pi*var.print_diameter)/(pi*var.filament_diameter*var.filament_diameter/4)*var.extrusion_multiplier
       G2 I{var.print_diameter/2} E{var.filament_length} F{var.print_speed*60}
       if var.layers_count!=1                                            ; Если это НЕ 1-й слой, то НЕ печатать кайму и внутренне заполнение
