@@ -29,7 +29,8 @@ var babystepping=0.00         ; Указать BabyStepping (минус умен
 var z_lift=0.0                ; Указать высоту для холостых перемещений, мм
 var z_end=50                  ; Указать смещение Z по завершению теста, мм
 
-var print_speed=20            ; Указать скорость печати, мм/сек
+var print_speed_first=20      ; Указать скорость печати первого слоя, мм/сек
+var print_speed_others=60     ; Указать скорость печати, мм/сек
 var travel_speed=150          ; Указать скорость холостых перемещений, мм/сек
 var retract_speed=30          ; Указать скорость ретракта, мм/сек
 
@@ -77,15 +78,16 @@ M300 P500                                                               ; Зву
 G90                                                                     ; Выбор абсолютных перемещений
 G1 Z{var.line_height}                                                   ; Перемещение на высоту слоя
 G91                                                                     ; Выбор относительных перемещений
-G1 X{var.move_lengthX} E{var.filament_lengthX} F{var.print_speed*60}    ; Печать линии X+
-G1 Y{var.move_lengthY} E{var.filament_lengthY} F{var.print_speed*60}    ; Печать линии Y+
-G1 X{-var.move_lengthX} E{var.filament_lengthX} F{var.print_speed*60}   ; Печать линии X-
-G1 Y{-var.move_lengthY} E{var.filament_lengthY} F{var.print_speed*60}   ; Печать линии Y-
+G1 X{var.move_lengthX} E{var.filament_lengthX} F{var.print_speed_first*60}    ; Печать линии X+
+G1 Y{var.move_lengthY} E{var.filament_lengthY} F{var.print_speed_first*60}    ; Печать линии Y+
+G1 X{-var.move_lengthX} E{var.filament_lengthX} F{var.print_speed_first*60}   ; Печать линии X-
+G1 Y{-var.move_lengthY} E{var.filament_lengthY} F{var.print_speed_first*60}   ; Печать линии Y-
 G10                                                                     ; Ретракт
 G91 G1 Z{var.z_lift}                                                    ; Переместить сопло от стола
 
 ; -------------------------- Печать башен ------------------------------
 
+var print_speed=0
 var retract_length=var.retract_start                                    ; Создание переменной - длина ретракта
 var print_diameter=0                                                    ; Создание переменной - диаметр печатаемой окружности
 var filament_length=0                                                   ; Создание переменной - длина филамента при печати окружности
@@ -101,8 +103,10 @@ while var.layers_count <= var.layers_number                             ; Вып
    ;Левая башня
    if var.layers_count==1
       set var.print_diameter=var.tower_diameter+var.brim_width*2        ; Если печать 1-го слоя, то учитывать кайму
+      set var.print_speed=print_speed_first                             ; Если печать 1-го слоя, задать скорость первого слоя
    else
-      set var.print_diameter=var.tower_diameter                         ; Если печать НЕ 1-го слоя, то НЕ учитывать кайму         
+      set var.print_diameter=var.tower_diameter                         ; Если печать НЕ 1-го слоя, то НЕ учитывать кайму
+      set var.print_speed=print_speed_others                            ; Если печать НЕ 1-го слоя, задать скорость
    G90                                                                  ; Выбор абсолютных перемещений
    ; Перемещение начальную точку
    G1 X{var.start_X+var.print_diameter/2} Y{var.start_Y} Z{var.line_height*var.layers_count} F{var.travel_speed*60}
@@ -113,7 +117,7 @@ while var.layers_count <= var.layers_number                             ; Вып
       G2 I{-var.print_diameter/2} E{var.filament_length} F{var.print_speed*60}
       set var.print_diameter=var.print_diameter-var.line_width*2        ; Диаметр следующей внутренней окружности
 
-	  ; Если это НЕ 1-й слой, напечатать заданное число периметров башни
+      ; Если это НЕ 1-й слой, напечатать заданное число периметров башни
       if (var.layers_count!=1) & (var.print_diameter<(var.tower_diameter-var.tower_perimeters*var.line_width))
          break
 
