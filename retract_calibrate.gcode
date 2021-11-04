@@ -23,7 +23,7 @@ var brim_number=5             ; Указать количество линий �
 var line_width=0.4            ; Указать ширину линий, мм
 var line_height=0.2           ; Указать толщину линий, мм
 var filament_diameter=1.75    ; Указать диаметр прутка, мм
-var extrusion_multiplier=1.10 ; Указать коэффициент экструзии
+var extrusion_multiplier=1.05 ; Указать коэффициент экструзии
 
 var babystepping=0.00         ; Указать BabyStepping (минус уменьшает зазор), мм
 var z_lift=0.0                ; Указать высоту для холостых перемещений, мм
@@ -61,8 +61,8 @@ M290 R0 S{var.babystepping}                                             ; Зад
 ; ------- Прочистка сопла (печать квадрата вокруг тестовых башен) ------
 
 M300 P500                                                               ; Звуковой сигнал
-G90
-var brim_width=var.brim_number*var.line_width                           ; Выбор абсолютных перемещений
+G90                                                                     ; Выбор абсолютных перемещений
+var brim_width=var.brim_number*var.line_width                           ; Ширина юбки
 G1 X{var.start_X-var.tower_diameter/2-var.brim_width-var.square_offset} Y{var.start_Y-var.tower_diameter/2-var.brim_width-var.square_offset} Z{var.z_lift} F{var.travel_speed*60}
 G1 Z0                                                                   ; Упираем сопло в стол чтобы пластик не вытекал
 M109 S{var.temperature_hotend}                                          ; Нагрев HotEnd`а с ожиданием достижения температуры
@@ -104,16 +104,21 @@ while var.layers_count <= var.layers_number                             ; Вып
    else
       set var.print_diameter=var.tower_diameter                         ; Если печать НЕ 1-го слоя, то НЕ учитывать кайму         
    G90                                                                  ; Выбор абсолютных перемещений
-   G1 X{var.start_X+var.print_diameter/2} Y{var.start_Y} F{var.travel_speed*60}
-   G1 Z{var.line_height*var.layers_count}                               ; Перемещение Z на высоту текущего слоя
+   ; Перемещение начальную точку
+   G1 X{var.start_X+var.print_diameter/2} Y{var.start_Y} Z{var.line_height*var.layers_count} F{var.travel_speed*60}
    G11                                                                  ; Возврат пластика после ретракта
    while var.print_diameter > 8*var.line_width                          ; Ограничение печати внутреннего заполнения
+      ; Расчёт длины филамента
       set var.filament_length=(var.line_width*var.line_height*pi*var.print_diameter)/(pi*var.filament_diameter*var.filament_diameter/4)*var.extrusion_multiplier
       G2 I{-var.print_diameter/2} E{var.filament_length} F{var.print_speed*60}
-      if (var.layers_count!=1) & (var.print_diameter<=(var.tower_diameter-var.tower_perimeters*var.line_width)) ; Если это НЕ 1-й слой, напечатать заданное число периметров башни
-         break
-      G91 G1 X{-var.line_width}                                         ; Переход к следующей внутренней окружности
       set var.print_diameter=var.print_diameter-var.line_width*2        ; Диаметр следующей внутренней окружности
+
+	  ; Если это НЕ 1-й слой, напечатать заданное число периметров башни
+      if (var.layers_count!=1) & (var.print_diameter<(var.tower_diameter-var.tower_perimeters*var.line_width))
+         break
+
+      G91 G1 X{-var.line_width}                                         ; Переход к следующей внутренней окружности
+
    G10                                                                  ; Ретракт
    G91 G1 Z{var.z_lift} F{var.travel_speed*60}                          ; Опустить стол перед холостым перемещением
 
@@ -126,12 +131,17 @@ while var.layers_count <= var.layers_number                             ; Вып
    G1 Z{var.line_height*var.layers_count}                               ; Перемещение Z на высоту текущего слоя
    G11                                                                  ; Возврат пластика после ретракта
    while var.print_diameter > 8*var.line_width                          ; Ограничение печати внутреннего заполнения
+      ; Расчёт длины филамента
       set var.filament_length=(var.line_width*var.line_height*pi*var.print_diameter)/(pi*var.filament_diameter*var.filament_diameter/4)*var.extrusion_multiplier
-      G2 I{var.print_diameter/2} E{var.filament_length} F{var.print_speed*60}
-      if (var.layers_count!=1) & (var.print_diameter<=(var.tower_diameter-var.tower_perimeters*var.line_width)) ; Если это НЕ 1-й слой, напечатать заданное число периметров башни
-         break
-      G91 G1 X{var.line_width}                                          ; Переход к следующей внутренней окружности
+      G2 I{var.print_diameter/2} E{var.filament_length} F{var.print_speed*60} ; Печать окружности
       set var.print_diameter=var.print_diameter-var.line_width*2        ; Диаметр следующей внутренней окружности
+
+      ; Если это НЕ 1-й слой, напечатать заданное число периметров башни
+      if (var.layers_count!=1) & (var.print_diameter<(var.tower_diameter-var.tower_perimeters*var.line_width))
+         break
+
+      G91 G1 X{var.line_width}                                          ; Переход к следующей внутренней окружности
+
    G10                                                                  ; Ретракт
    G91 G1 Z{var.z_lift} F{var.travel_speed*60}                          ; Опустить стол перед холостым перемещением
    
