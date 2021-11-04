@@ -18,7 +18,7 @@ var start_X=30                ; Указать координату X центр
 var start_Y=80                ; Указать координату Y центра первой башни, мм
 var towers_distance=90        ; Указать расстояние между центрами башен, мм
 var square_offset=5           ; Указать смещение квадрата вокруг тестовых линий (для прочистки сопла), мм
-var brim_number=5             ; Количество линий каймы 
+var brim_number=5             ; Указать количество линий каймы 
 
 var line_width=0.4            ; Указать ширину линий, мм
 var line_height=0.2           ; Указать толщину линий, мм
@@ -36,7 +36,7 @@ var retract_speed=30          ; Указать скорость ретракта
 var pa=0.025                  ; Указать коэффициент Pressure Advance
 
 var model_fan_speed=0.2       ; Указать производительность вентилятора обдува модели (от 0.0 до 1.0)
-var model_fan_layer_start=3   ; Номер слоя, на котором включить обдув модели
+var model_fan_layer_start=3   ; Указать номер слоя, с которого включить обдув модели
 ;-----------------------------------------------------------------------
 ;-----------------------------------------------------------------------
 ;=======================================================================
@@ -47,10 +47,9 @@ var model_fan_layer_start=3   ; Номер слоя, на котором вкл�
 M300 P500                                                               ; Звуковой сигнал
 T0                                                                      ; Выбор инструмента 0
 
-M572 D0 S{var.pa}                                                       ; Установка коэффициента Pressure Advance
+M572 D0 S{var.pa}                                                       ; Задание коэффициента Pressure Advance
 M207 F{var.retract_speed*60} S{var.retract_start}                       ; Задание начальной скорости и длины ретракта
 
-M572 D0 S0                                                              ; Задание коэффициента Pressure Advance
 M83                                                                     ; Выбор относительных координат оси экструдера
 
 M104 S{var.temperature_hotend-80}                                       ; Предварительный нагрев сопла
@@ -59,7 +58,7 @@ M190 S{var.temperature_hotbed}                                          ; Наг
 G28                                                                     ; Калибровка всех осей
 M290 R0 S{var.babystepping}                                             ; Задание BabyStepping 
 
-; ----------------------------------------------------------------------   
+; ------- Прочистка сопла (печать квадрата вокруг тестовых башен) ------
 
 M300 P500                                                               ; Звуковой сигнал
 G90
@@ -73,8 +72,6 @@ var move_lengthX=var.towers_distance+var.tower_diameter+var.square_offset*2+var.
 var filament_lengthX=(var.line_width*var.line_height*var.move_lengthX)/(pi*var.filament_diameter*var.filament_diameter/4)*var.extrusion_multiplier
 var move_lengthY=var.tower_diameter+var.brim_width*2+var.square_offset*2                            ; Длина квадрата вдоль Y
 var filament_lengthY=(var.line_width*var.line_height*var.move_lengthY)/(pi*var.filament_diameter*var.filament_diameter/4)*var.extrusion_multiplier
-
-; Прочистка сопла (квадрат вокруг тестовых башен)
 
 M300 P500                                                               ; Звуковой сигнал
 G90                                                                     ; Выбор абсолютных перемещений
@@ -113,7 +110,7 @@ while var.layers_count <= var.layers_number                             ; Вып
    while var.print_diameter > 8*var.line_width                          ; Ограничение печати внутреннего заполнения
       set var.filament_length=(var.line_width*var.line_height*pi*var.print_diameter)/(pi*var.filament_diameter*var.filament_diameter/4)*var.extrusion_multiplier
       G2 I{-var.print_diameter/2} E{var.filament_length} F{var.print_speed*60}
-      if (var.layers_count!=1) & (var.print_diameter<=(var.tower_diameter-var.tower_perimeters*var.line_width)) ; Если это НЕ 1-й слой, напечатать заданное число периметров
+      if (var.layers_count!=1) & (var.print_diameter<=(var.tower_diameter-var.tower_perimeters*var.line_width)) ; Если это НЕ 1-й слой, напечатать заданное число периметров башни
          break
       G91 G1 X{-var.line_width}                                         ; Переход к следующей внутренней окружности
       set var.print_diameter=var.print_diameter-var.line_width*2        ; Диаметр следующей внутренней окружности
@@ -131,7 +128,7 @@ while var.layers_count <= var.layers_number                             ; Вып
    while var.print_diameter > 8*var.line_width                          ; Ограничение печати внутреннего заполнения
       set var.filament_length=(var.line_width*var.line_height*pi*var.print_diameter)/(pi*var.filament_diameter*var.filament_diameter/4)*var.extrusion_multiplier
       G2 I{var.print_diameter/2} E{var.filament_length} F{var.print_speed*60}
-      if (var.layers_count!=1) & (var.print_diameter<=(var.tower_diameter-var.tower_perimeters*var.line_width)) ; Если это НЕ 1-й слой, напечатать заданное число периметров
+      if (var.layers_count!=1) & (var.print_diameter<=(var.tower_diameter-var.tower_perimeters*var.line_width)) ; Если это НЕ 1-й слой, напечатать заданное число периметров башни
          break
       G91 G1 X{var.line_width}                                          ; Переход к следующей внутренней окружности
       set var.print_diameter=var.print_diameter-var.line_width*2        ; Диаметр следующей внутренней окружности
