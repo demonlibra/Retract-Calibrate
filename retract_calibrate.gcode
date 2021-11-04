@@ -87,7 +87,7 @@ var print_diameter=0                                                    ; Соз
 var filament_length=0                                                   ; Создание переменной - длина филамента при печати окружности
 var layers_count=1                                                      ; Создание переменной - счётчик слоёв
 var layers_number=floor(var.retract_number_steps*var.retract_step_height/var.line_height) ; Общее колиство слоёв
-echo "Всего слоёв "^var.layers_number
+echo "Всего будет напечатано "^var.layers_number^" слоёв. Высота башен "^var.retract_number_steps*var.retract_step_height^" мм."
 
 while var.layers_count <= var.layers_number                             ; Выполнять цикл до достижения общего количества слоёв
 
@@ -133,7 +133,7 @@ while var.layers_count <= var.layers_number                             ; Вып
    
    ;Расчёт длины ретракта
    if (floor(var.layers_count/floor(var.retract_step_height/var.line_height)))==(var.layers_count/floor(var.retract_step_height/var.line_height))
-      echo "Напечатано слоёв "^var.layers_count^". Длина ретракта "^var.retract_length^" мм."
+      echo "Напечатано "^var.layers_count*var.line_height^" мм башен. Длина ретракта "^var.retract_length^" мм."
       set var.retract_length=var.retract_length+var.retract_step        ; Расчёт длины
       M207 S{var.retract_length}                                        ; Изменение длины ретракта
       
