@@ -13,6 +13,7 @@ var retract_step_height=5     ; Указать высоту печати с од
 var retract_number_steps=5    ; Указать количество тестовых ступеней
 
 var tower_diameter=10         ; Указать диаметр башни, мм
+var tower_perimeters=2        ; Указать количество периметров башни
 var start_X=30                ; Указать координату X центра первой башни, мм
 var start_Y=80                ; Указать координату Y центра первой башни, мм
 var towers_distance=90        ; Указать расстояние между центрами башен, мм
@@ -112,7 +113,7 @@ while var.layers_count <= var.layers_number                             ; Вып
    while var.print_diameter > 8*var.line_width                          ; Ограничение печати внутреннего заполнения
       set var.filament_length=(var.line_width*var.line_height*pi*var.print_diameter)/(pi*var.filament_diameter*var.filament_diameter/4)*var.extrusion_multiplier
       G2 I{-var.print_diameter/2} E{var.filament_length} F{var.print_speed*60}
-      if var.layers_count!=1                                            ; Если это НЕ 1-й слой, то НЕ печатать кайму и внутренне заполнение
+      if (var.layers_count!=1) & (var.print_diameter<=(var.tower_diameter-var.tower_perimeters*var.line_width)) ; Если это НЕ 1-й слой, напечатать заданное число периметров
          break
       G91 G1 X{-var.line_width}                                         ; Переход к следующей внутренней окружности
       set var.print_diameter=var.print_diameter-var.line_width*2        ; Диаметр следующей внутренней окружности
@@ -130,7 +131,7 @@ while var.layers_count <= var.layers_number                             ; Вып
    while var.print_diameter > 8*var.line_width                          ; Ограничение печати внутреннего заполнения
       set var.filament_length=(var.line_width*var.line_height*pi*var.print_diameter)/(pi*var.filament_diameter*var.filament_diameter/4)*var.extrusion_multiplier
       G2 I{var.print_diameter/2} E{var.filament_length} F{var.print_speed*60}
-      if var.layers_count!=1                                            ; Если это НЕ 1-й слой, то НЕ печатать кайму и внутренне заполнение
+      if (var.layers_count!=1) & (var.print_diameter<=(var.tower_diameter-var.tower_perimeters*var.line_width)) ; Если это НЕ 1-й слой, напечатать заданное число периметров
          break
       G91 G1 X{var.line_width}                                          ; Переход к следующей внутренней окружности
       set var.print_diameter=var.print_diameter-var.line_width*2        ; Диаметр следующей внутренней окружности
