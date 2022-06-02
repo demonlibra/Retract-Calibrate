@@ -103,10 +103,10 @@ while var.layers_count <= var.layers_number                             ; Вып
    ;Левая башня
    if var.layers_count==1
       set var.print_diameter=var.tower_diameter+var.brim_width*2        ; Если печать 1-го слоя, то учитывать кайму
-      set var.print_speed=print_speed_first                             ; Если печать 1-го слоя, задать скорость первого слоя
+      set var.print_speed=var.print_speed_first                             ; Если печать 1-го слоя, задать скорость первого слоя
    else
       set var.print_diameter=var.tower_diameter                         ; Если печать НЕ 1-го слоя, то НЕ учитывать кайму
-      set var.print_speed=print_speed_others                            ; Если печать НЕ 1-го слоя, задать скорость
+      set var.print_speed=var.print_speed_others                            ; Если печать НЕ 1-го слоя, задать скорость
    G90                                                                  ; Выбор абсолютных перемещений
    ; Перемещение начальную точку
    G1 X{var.start_X+var.print_diameter/2} Y{var.start_Y} Z{var.line_height*var.layers_count} F{var.travel_speed*60}
