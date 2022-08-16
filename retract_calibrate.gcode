@@ -87,6 +87,7 @@ G91 G1 Z{var.z_lift}                                                    ; Пер
 
 ; -------------------------- Печать башен ------------------------------
 
+var retract_marker=0                                                    ; Создание переменной - увеличение диаметра башни при смене длины ретракта
 var print_speed=0
 var retract_length=var.retract_start                                    ; Создание переменной - длина ретракта
 var print_diameter=0                                                    ; Создание переменной - диаметр печатаемой окружности
@@ -101,15 +102,17 @@ while var.layers_count <= var.layers_number                             ; Вып
       M106 S{var.model_fan_speed}                                       ; Включить обдув на указанном слое
 
    ;Левая башня
-   if var.layers_count==1
-      set var.print_diameter=var.tower_diameter+var.brim_width*2        ; Если печать 1-го слоя, то учитывать кайму
-      set var.print_speed=var.print_speed_first                             ; Если печать 1-го слоя, задать скорость первого слоя
-   else
-      set var.print_diameter=var.tower_diameter                         ; Если печать НЕ 1-го слоя, то НЕ учитывать кайму
-      set var.print_speed=var.print_speed_others                            ; Если печать НЕ 1-го слоя, задать скорость
+   if var.layers_count==1                                               ; Если печать 1-го слоя левой башни,
+      set var.print_diameter=var.tower_diameter+var.brim_width*2        ;    учитывать кайму
+      set var.print_speed=var.print_speed_first                         ;    задать скорость первого слоя
+   else                                                                 ; иначе
+      set var.print_diameter=var.tower_diameter+var.retract_marker      ;    НЕ учитывать кайму
+      set var.print_speed=var.print_speed_others                        ;    задать скорость
+
    G90                                                                  ; Выбор абсолютных перемещений
-   ; Перемещение начальную точку
+   ; Перемещение в начальную точку левой башни
    G1 X{var.start_X+var.print_diameter/2} Y{var.start_Y} Z{var.line_height*var.layers_count} F{var.travel_speed*60}
+
    G11                                                                  ; Возврат пластика после ретракта
    while var.print_diameter > 8*var.line_width                          ; Ограничение печати внутреннего заполнения
       ; Расчёт длины филамента
@@ -117,22 +120,26 @@ while var.layers_count <= var.layers_number                             ; Вып
       G2 I{-var.print_diameter/2} E{var.filament_length} F{var.print_speed*60}
       set var.print_diameter=var.print_diameter-var.line_width*2        ; Диаметр следующей внутренней окружности
 
-      ; Если это НЕ 1-й слой, напечатать заданное число периметров башни
-      if (var.layers_count!=1) & (var.print_diameter<(var.tower_diameter-var.tower_perimeters*var.line_width))
+      ; Если это НЕ 1-й слой, напечатать заданное число периметров башни и прервать цикл
+      if (var.layers_count!=1) & ((var.print_diameter-var.retract_marker)<(var.tower_diameter-var.tower_perimeters*var.line_width))
          break
 
       G91 G1 X{-var.line_width}                                         ; Переход к следующей внутренней окружности
 
    G10                                                                  ; Ретракт
-   G91 G1 Z{var.z_lift} F{var.travel_speed*60}                          ; Опустить стол перед холостым перемещением
+   G91 G1 Z{var.z_lift} F{var.travel_speed*60}                          ; Опустить стол перед холостым перемещением к правой башне
 
-   if var.layers_count==1
-      set var.print_diameter=var.tower_diameter+var.brim_width*2        ; Если печать 1-го слоя, то учитывать кайму
-   else
-      set var.print_diameter=var.tower_diameter                         ; Если печать НЕ 1-го слоя, то НЕ учитывать кайму
+   ;Правая башня
+   if var.layers_count==1                                               ; Если печать 1-го слоя правой башни,
+      set var.print_diameter=var.tower_diameter+var.brim_width*2        ;    учитывать кайму
+   else                                                                 ; иначе
+      set var.print_diameter=var.tower_diameter                         ;    НЕ учитывать кайму
+
    G90                                                                  ; Выбор абсолютных перемещений
+	; Перемещение в начальную точку правой башни
    G1 X{var.start_X+var.towers_distance-var.print_diameter/2} Y{var.start_Y} F{var.travel_speed*60}
    G1 Z{var.line_height*var.layers_count}                               ; Перемещение Z на высоту текущего слоя
+
    G11                                                                  ; Возврат пластика после ретракта
    while var.print_diameter > 8*var.line_width                          ; Ограничение печати внутреннего заполнения
       ; Расчёт длины филамента
@@ -154,7 +161,9 @@ while var.layers_count <= var.layers_number                             ; Вып
       echo "Напечатано "^var.layers_count*var.line_height^" мм башен. Длина ретракта "^var.retract_length^" мм."
       set var.retract_length=var.retract_length+var.retract_step        ; Расчёт длины
       M207 S{var.retract_length}                                        ; Изменение длины ретракта
-      
+      set var.retract_marker=0.2                                        ; Увеличение диаметра башни при смене слоя
+   else
+      set var.retract_marker=0
 
    set var.layers_count=var.layers_count+1                              ; Номер следующего слоя
 
